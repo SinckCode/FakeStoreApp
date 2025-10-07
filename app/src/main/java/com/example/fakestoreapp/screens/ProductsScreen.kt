@@ -10,10 +10,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,11 +25,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.example.fakestoreapp.models.Product
 import com.example.fakestoreapp.services.ProductService
+import com.example.fakestoreapp.ui.theme.FakeStoreAppTheme
 import com.example.fakestoreapp.ui.theme.ProductDetailScreenRoute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -101,8 +106,6 @@ fun ProductsScreen(
                     )
                 }
 
-                // (Opcional) más secciones debajo…
-                // item { Spacer(Modifier.height(24.dp)) }
             }
         }
     }
@@ -297,15 +300,14 @@ private fun HomeBottomBar() {
         NavigationBarItem(
             selected = false, onClick = { /* Cart */ },
             icon = {
-                // simple placeholder “cart” icon using an Image box
-                Box(Modifier.size(24.dp).clip(CircleShape).background(Color.LightGray))
+                Icon(Icons.Default.ShoppingCart, null)
             },
             label = { Text("Cart") }
         )
         NavigationBarItem(
             selected = false, onClick = { /* Profile */ },
             icon = {
-                Box(Modifier.size(24.dp).clip(CircleShape).background(Color.LightGray))
+                Icon(Icons.Default.AccountCircle, null)
             },
             label = { Text("Profile") }
         )
@@ -313,3 +315,13 @@ private fun HomeBottomBar() {
 }
 
 
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ProductsScreenPreview() {
+    FakeStoreAppTheme {
+        ProductsScreen(
+            navController = rememberNavController(),
+            contentPadding = PaddingValues(0.dp)
+        )
+    }
+}

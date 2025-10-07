@@ -48,7 +48,7 @@ private val Accent        = Color(0xFFE3A37A)
 fun ProductDetailScreen(
     id: Int,
     contentPadding: PaddingValues,
-    navController: NavController // <— ahora no nulo y disponible para navegar
+    navController: NavController //
 ) {
     var product by remember { mutableStateOf<Product?>(null) }
     var loading by remember { mutableStateOf(true) }
@@ -120,7 +120,7 @@ fun ProductDetailScreen(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { navController.popBackStack() }) { // <— FIX
+                IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                 }
                 Spacer(Modifier.weight(1f))
@@ -209,7 +209,6 @@ fun ProductDetailScreen(
     }
 }
 
-/* ---------- Bottom bar ---------- */
 @Composable
 private fun BottomPurchaseBar(p: Product?) {
     Surface(color = Color.White, shadowElevation = 2.dp) {
@@ -239,7 +238,6 @@ private fun BottomPurchaseBar(p: Product?) {
     }
 }
 
-/* ---------- Helpers ---------- */
 @Composable
 private fun Pill(
     text: String,

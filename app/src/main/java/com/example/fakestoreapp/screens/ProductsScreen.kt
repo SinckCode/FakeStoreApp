@@ -42,7 +42,6 @@ import kotlinx.coroutines.delay
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-/* ---------- Paleta rápida para buen contraste ---------- */
 private val SurfaceSoft      = Color(0xFFF7F8FC)
 private val TextPrimary      = Color(0xFF111827) // casi negro
 private val TextSecondary    = Color(0xFF6B7280) // gris 500
@@ -53,12 +52,10 @@ private val ImagePlaceholder = Color(0xFFEDEDED)
 private val PriceBg          = Color(0xFFF4F5F7)
 private val AccentIndicator  = Color(0xFFE3A37A) // naranja suave
 
-/* ---------- Tamaños fijos para las cards ---------- */
 private val ProductCardWidth   = 200.dp
 private val ProductCardHeight  = 230.dp
 private val ProductImageHeight = 120.dp
 
-/* ---------- Helper: recorta por palabras y añade "…" ---------- */
 private fun condenseAndEllipsize(text: String, maxChars: Int): String {
     val clean = text.replace(Regex("\\s+"), " ").trim()
     if (clean.length <= maxChars) return clean
@@ -356,7 +353,7 @@ private fun ProductMiniCard(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .width(ProductCardWidth)
-            .height(ProductCardHeight), // 🔒 alto fijo
+            .height(ProductCardHeight),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -384,7 +381,6 @@ private fun ProductMiniCard(
 
             Spacer(Modifier.height(10.dp))
 
-            // Reservamos exactamente 2 líneas para el título
             Text(
                 condenseAndEllipsize(product.title, maxChars = 50),
                 style = MaterialTheme.typography.bodyMedium,
@@ -448,7 +444,7 @@ private fun HomeBottomBar() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ProductsScreenPreview() {
-    FakeStoreAppTheme(darkTheme = false) { // fuerza tema claro en preview
+    FakeStoreAppTheme(darkTheme = false) {
         ProductsScreen(
             navController = rememberNavController(),
             contentPadding = PaddingValues(0.dp)

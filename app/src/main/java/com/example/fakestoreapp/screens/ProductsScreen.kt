@@ -58,6 +58,16 @@ private val ProductCardWidth   = 200.dp
 private val ProductCardHeight  = 230.dp
 private val ProductImageHeight = 120.dp
 
+/* ---------- Helper: recorta por palabras y añade "…" ---------- */
+private fun condenseAndEllipsize(text: String, maxChars: Int): String {
+    val clean = text.replace(Regex("\\s+"), " ").trim()
+    if (clean.length <= maxChars) return clean
+    val cut = clean.take(maxChars)
+    val lastSpace = cut.lastIndexOf(' ')
+    val safe = if (lastSpace > 0) cut.substring(0, lastSpace) else cut
+    return safe.trimEnd('.', ',', ';', ':') + "…"
+}
+
 @Composable
 fun ProductsScreen(
     navController: NavController,
@@ -190,7 +200,6 @@ private fun SearchBar() {
     )
 }
 
-/* -------- Banner: dinámico por producto y rotando -------- */
 @Composable
 private fun PromoBanner(
     products: List<Product>,
@@ -210,6 +219,13 @@ private fun PromoBanner(
     }
 
     val current: Product? = products.getOrNull(index)
+    val titleText = remember(current) {
+        current?.title?.let { condenseAndEllipsize(it, maxChars = 20) } ?: "Featured product"
+    }
+    val descText = remember(current) {
+        current?.description?.let { condenseAndEllipsize(it, maxChars = 50) }
+            ?: "Discover our most popular items."
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -225,7 +241,7 @@ private fun PromoBanner(
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = current?.title ?: "Featured product",
+                    text = titleText,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -233,9 +249,9 @@ private fun PromoBanner(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = current?.description ?: "Discover our most popular items.",
+                    text = descText,
                     color = TextSecondary,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 4.dp, end = 4.dp),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -370,7 +386,7 @@ private fun ProductMiniCard(
 
             // Reservamos exactamente 2 líneas para el título
             Text(
-                product.title,
+                condenseAndEllipsize(product.title, maxChars = 50),
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextPrimary,
                 maxLines = 2,

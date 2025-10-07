@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,12 +30,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.example.fakestoreapp.models.Product
 import com.example.fakestoreapp.services.ProductService
 import com.example.fakestoreapp.ui.theme.FakeStoreAppTheme
 import com.example.fakestoreapp.ui.theme.ProductDetailScreenRoute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -45,8 +49,14 @@ private val TextSecondary    = Color(0xFF6B7280) // gris 500
 private val TextMuted        = Color(0xFF9CA3AF) // gris 400
 private val ChipBg           = Color(0xFFF2F3F5)
 private val BannerBg         = Color(0xFFF3EEE8)
+private val ImagePlaceholder = Color(0xFFEDEDED)
 private val PriceBg          = Color(0xFFF4F5F7)
 private val AccentIndicator  = Color(0xFFE3A37A) // naranja suave
+
+/* ---------- Tamaños fijos para las cards ---------- */
+private val ProductCardWidth   = 200.dp
+private val ProductCardHeight  = 230.dp
+private val ProductImageHeight = 120.dp
 
 @Composable
 fun ProductsScreen(
@@ -85,6 +95,9 @@ fun ProductsScreen(
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         } else {
+            // Imágenes para el banner (usa las primeras 5 de la API)
+            val promoImages = remember(products) { products.take(5).map { it.image } }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -95,7 +108,7 @@ fun ProductsScreen(
             ) {
                 item { HeaderSection() }
                 item { SearchBar() }
-                item { PromoBanner() }
+                item { PromoBanner(images = promoImages, rotationMillis = 3000L) }
                 item {
                     CategoryChips(
                         categories = listOf("All Product", "Smartphone", "Wearable", "Camera"),
@@ -174,8 +187,24 @@ private fun SearchBar() {
     )
 }
 
+/* -------- Banner con imagen rotando -------- */
 @Composable
-private fun PromoBanner() {
+private fun PromoBanner(
+    images: List<String>,
+    rotationMillis: Long = 3000L
+) {
+    val context = LocalContext.current
+    var index by remember(images) { mutableStateOf(0) }
+
+    // Auto-rotación
+    LaunchedEffect(images, rotationMillis) {
+        if (images.size <= 1) return@LaunchedEffect
+        while (true) {
+            delay(rotationMillis)
+            index = (index + 1) % images.size
+        }
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = BannerBg),
@@ -206,13 +235,31 @@ private fun PromoBanner() {
                     )
                 ) { Text("Shop Now") }
             }
-            // Imagen de producto (placeholder)
+
+            // Imagen derecha que rota
             Box(
                 Modifier
                     .size(120.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFEDEDED))
-            )
+                    .background(ImagePlaceholder),
+                contentAlignment = Alignment.Center
+            ) {
+                val url = images.getOrNull(index)
+                if (url != null) {
+                    val req = remember(index, url) {
+                        ImageRequest.Builder(context)
+                            .data(url)
+                            .crossfade(true) // suaviza el cambio al rotar
+                            .build()
+                    }
+                    AsyncImage(
+                        model = req,
+                        contentDescription = "Promo image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
         }
     }
 }
@@ -276,15 +323,22 @@ private fun ProductMiniCard(
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.width(200.dp),
+        modifier = Modifier
+            .width(ProductCardWidth)
+            .height(ProductCardHeight), // 🔒 alto fijo
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(Modifier.padding(12.dp)) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            // Imagen con alto fijo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
+                    .height(ProductImageHeight)
                     .clip(RoundedCornerShape(14.dp))
                     .background(PriceBg),
                 contentAlignment = Alignment.Center
@@ -296,15 +350,21 @@ private fun ProductMiniCard(
                     modifier = Modifier.fillMaxSize()
                 )
             }
+
             Spacer(Modifier.height(10.dp))
+
+            // Reservamos exactamente 2 líneas para el título
             Text(
                 product.title,
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextPrimary,
                 maxLines = 2,
+                minLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(Modifier.height(6.dp))
+
+            Spacer(Modifier.weight(1f))
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "$ ${"%.2f".format(product.price)}",

@@ -57,7 +57,8 @@ class MainActivity : ComponentActivity() {
                             val args = backStack.toRoute<ProductDetailScreenRoute>()
                             ProductDetailScreen(
                                 id = args.id,
-                                contentPadding = innerPadding
+                                contentPadding = innerPadding,
+                                navController = navController
                             )
                         }
                     }

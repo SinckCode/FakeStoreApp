@@ -95,9 +95,6 @@ fun ProductsScreen(
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
         } else {
-            // Imágenes para el banner (usa las primeras 5 de la API)
-            val promoImages = remember(products) { products.take(5).map { it.image } }
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -108,7 +105,13 @@ fun ProductsScreen(
             ) {
                 item { HeaderSection() }
                 item { SearchBar() }
-                item { PromoBanner(images = promoImages, rotationMillis = 3000L) }
+                item {
+                    PromoBanner(
+                        products = products.take(5),
+                        rotationMillis = 3000L,
+                        onShopNow = { id -> navController.navigate(ProductDetailScreenRoute(id)) }
+                    )
+                }
                 item {
                     CategoryChips(
                         categories = listOf("All Product", "Smartphone", "Wearable", "Camera"),
@@ -187,23 +190,26 @@ private fun SearchBar() {
     )
 }
 
-/* -------- Banner con imagen rotando -------- */
+/* -------- Banner: dinámico por producto y rotando -------- */
 @Composable
 private fun PromoBanner(
-    images: List<String>,
-    rotationMillis: Long = 3000L
+    products: List<Product>,
+    rotationMillis: Long = 3000L,
+    onShopNow: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    var index by remember(images) { mutableStateOf(0) }
+    var index by remember(products) { mutableStateOf(0) }
 
     // Auto-rotación
-    LaunchedEffect(images, rotationMillis) {
-        if (images.size <= 1) return@LaunchedEffect
+    LaunchedEffect(products, rotationMillis) {
+        if (products.size <= 1) return@LaunchedEffect
         while (true) {
             delay(rotationMillis)
-            index = (index + 1) % images.size
+            index = (index + 1) % products.size
         }
     }
+
+    val current: Product? = products.getOrNull(index)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -219,14 +225,23 @@ private fun PromoBanner(
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    "Get Pixel 7 and\nPixel 7 Pro",
+                    text = current?.title ?: "Featured product",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = TextPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Text("Full speed ahead.", color = TextSecondary, modifier = Modifier.padding(top = 4.dp))
+                Text(
+                    text = current?.description ?: "Discover our most popular items.",
+                    color = TextSecondary,
+                    modifier = Modifier.padding(top = 4.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Button(
-                    onClick = { /* CTA */ },
+                    onClick = { current?.let { onShopNow(it.id) } },
+                    enabled = current != null,
                     modifier = Modifier.padding(top = 12.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -236,7 +251,7 @@ private fun PromoBanner(
                 ) { Text("Shop Now") }
             }
 
-            // Imagen derecha que rota
+            // Imagen a la derecha
             Box(
                 Modifier
                     .size(120.dp)
@@ -244,17 +259,17 @@ private fun PromoBanner(
                     .background(ImagePlaceholder),
                 contentAlignment = Alignment.Center
             ) {
-                val url = images.getOrNull(index)
+                val url = current?.image
                 if (url != null) {
                     val req = remember(index, url) {
                         ImageRequest.Builder(context)
                             .data(url)
-                            .crossfade(true) // suaviza el cambio al rotar
+                            .crossfade(true)
                             .build()
                     }
                     AsyncImage(
                         model = req,
-                        contentDescription = "Promo image",
+                        contentDescription = current.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )

@@ -9,8 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
+import androidx.compose.material.icons.rounded.StarHalf
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +33,17 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.floor
+
+/* ------- Paleta para contraste ------- */
+private val SurfaceSoft   = Color(0xFFF7F8FC)
+private val HeaderSoft    = Color(0xFFE9EEF6)
+private val TextPrimary   = Color(0xFF111827)
+private val TextSecondary = Color(0xFF6B7280)
+private val PillBg        = Color(0xFFF3F4F6)
+private val PillBorder    = Color(0xFFE5E7EB)
+private val SheetBg       = Color.White
+private val StarColor     = Color(0xFFFFC107)
+private val Accent        = Color(0xFFE3A37A)
 
 @Composable
 fun ProductDetailScreen(
@@ -58,32 +70,8 @@ fun ProductDetailScreen(
     }
 
     Scaffold(
-        bottomBar = {
-            // Buy now + precio
-            val p = product
-            Surface(color = Color.White) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (p != null) {
-                        Text(
-                            text = NumberFormat.getCurrencyInstance(Locale.US).format(p.price),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.weight(1f))
-                    }
-                    Button(
-                        onClick = { /* TODO: agregar al carrito / comprar */ },
-                        modifier = Modifier.height(56.dp),
-                        shape = RoundedCornerShape(14.dp)
-                    ) { Text("Buy now") }
-                }
-            }
-        }
+        containerColor = SurfaceSoft,
+        bottomBar = { BottomPurchaseBar(product) }
     ) { insets ->
         if (loading) {
             Box(
@@ -108,21 +96,25 @@ fun ProductDetailScreen(
             return@Scaffold
         }
 
-        // ======= UI =======
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(insets)
+                .statusBarsPadding()
                 .padding(contentPadding)
         ) {
-            // Cabecera con fondo y top bar
+            // Cabecera con fondo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(320.dp)
-                    .background(Color(0xFFE9EEF6), RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                    .background(
+                        HeaderSoft,
+                        RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                    )
             )
 
+            // Top bar
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -130,13 +122,18 @@ fun ProductDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { navController?.popBackStack() }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                 }
                 Spacer(Modifier.weight(1f))
-                Text("Details", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Details",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary
+                )
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = { /* wishlist */ }) {
-                    Icon(Icons.Outlined.FavoriteBorder, contentDescription = "Fav")
+                    Icon(Icons.Outlined.FavoriteBorder, contentDescription = "Fav", tint = TextPrimary)
                 }
             }
 
@@ -148,16 +145,17 @@ fun ProductDetailScreen(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 64.dp)
-                    .size(230.dp)
+                    .size(260.dp)
             )
 
-            // Hoja inferior con info
+            // Sheet inferior
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter),
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = SheetBg),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     Modifier
@@ -165,19 +163,16 @@ fun ProductDetailScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-
-                    // Título + categoría como pill + disponibilidad
+                    // Título + pills
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                p.title,
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                        Text(
+                            p.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Pill(text = p.category.replaceFirstChar { it.uppercase() })
                             val inStock = p.rating.count > 0
@@ -189,84 +184,94 @@ fun ProductDetailScreen(
                         }
                     }
 
-                    // Rating (estrellas) + total reviews
+                    // Rating + reviews
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RatingStars(rate = p.rating.rate)
                         Spacer(Modifier.width(8.dp))
-                        Text(
-                            "(${p.rating.count})",
-                            color = Color(0xFF6B7280),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Text("(${p.rating.count})", color = TextSecondary)
                     }
 
-                    // Descripción (truncada como el mockup)
+                    // Descripción
                     Text(
                         p.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF6B7280),
+                        color = TextSecondary,
                         maxLines = 4,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    // Mini ficha de datos
+                    // Info
                     InfoRow(label = "Category", value = p.category)
                     InfoRow(label = "Rating", value = "${"%.1f".format(p.rating.rate)} / 5")
+                    Spacer(Modifier.height(4.dp))
                 }
             }
         }
     }
 }
 
-/* ---------- Helpers ---------- */
+/* ---------- Bottom bar ---------- */
+@Composable
+private fun BottomPurchaseBar(p: Product?) {
+    Surface(color = Color.White, shadowElevation = 2.dp) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (p != null) {
+                Text(
+                    text = NumberFormat.getCurrencyInstance(Locale.US).format(p.price),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(Modifier.weight(1f))
+            }
+            Button(
+                onClick = { /* TODO: Comprar */ },
+                modifier = Modifier.height(56.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Accent, contentColor = Color.White)
+            ) { Text("Buy now") }
+        }
+    }
+}
 
+/* ---------- Helpers ---------- */
 @Composable
 private fun Pill(
     text: String,
-    container: Color = Color(0xFFF3F4F6),
-    content: Color = Color(0xFF111827)
+    container: Color = PillBg,
+    content: Color = TextPrimary
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
             .background(container)
-            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(10.dp))
+            .border(1.dp, PillBorder, RoundedCornerShape(10.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp)
     ) { Text(text, color = content, style = MaterialTheme.typography.labelLarge) }
 }
 
 @Composable
 private fun RatingStars(rate: Double, max: Int = 5) {
-    // genera enteras, media y vacías
     val full = floor(rate).toInt().coerceIn(0, max)
-    val hasHalf = (rate - full) >= 0.25 && (rate - full) < 0.75
-    val half = if (hasHalf && full < max) 1 else 0
+    val fractional = rate - full
+    val half = if (fractional >= 0.25 && fractional < 0.75 && full < max) 1 else 0
     val empty = (max - full - half).coerceAtLeast(0)
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         repeat(full) {
-            Icon(
-                imageVector = Icons.Rounded.Star,
-                contentDescription = null,
-                tint = Color(0xFFFFC107),
-                modifier = Modifier.size(18.dp)
-            )
+            Icon(Icons.Rounded.Star, contentDescription = null, tint = StarColor, modifier = Modifier.size(18.dp))
         }
         repeat(half) {
-            Icon(
-                imageVector = Icons.Rounded.Star,
-                contentDescription = null,
-                tint = Color(0xFFFFC107),
-                modifier = Modifier.size(18.dp)
-            )
+            Icon(Icons.Rounded.StarHalf, contentDescription = null, tint = StarColor, modifier = Modifier.size(18.dp))
         }
         repeat(empty) {
-            Icon(
-                imageVector = Icons.Rounded.PlayArrow,
-                contentDescription = null,
-                tint = Color(0xFFFFC107),
-                modifier = Modifier.size(18.dp)
-            )
+            Icon(Icons.Rounded.StarBorder, contentDescription = null, tint = StarColor, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -281,7 +286,7 @@ private fun InfoRow(label: String, value: String) {
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, modifier = Modifier.weight(1f), color = Color(0xFF6B7280))
-        Text(value, fontWeight = FontWeight.Medium)
+        Text(label, modifier = Modifier.weight(1f), color = TextSecondary)
+        Text(value, fontWeight = FontWeight.Medium, color = TextPrimary)
     }
 }

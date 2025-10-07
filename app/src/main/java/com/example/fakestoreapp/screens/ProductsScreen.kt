@@ -1,7 +1,6 @@
 package com.example.fakestoreapp.screens
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,6 +38,16 @@ import kotlinx.coroutines.async
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+/* ---------- Paleta rápida para buen contraste ---------- */
+private val SurfaceSoft      = Color(0xFFF7F8FC)
+private val TextPrimary      = Color(0xFF111827) // casi negro
+private val TextSecondary    = Color(0xFF6B7280) // gris 500
+private val TextMuted        = Color(0xFF9CA3AF) // gris 400
+private val ChipBg           = Color(0xFFF2F3F5)
+private val BannerBg         = Color(0xFFF3EEE8)
+private val PriceBg          = Color(0xFFF4F5F7)
+private val AccentIndicator  = Color(0xFFE3A37A) // naranja suave
+
 @Composable
 fun ProductsScreen(
     navController: NavController,
@@ -65,6 +74,7 @@ fun ProductsScreen(
     }
 
     Scaffold(
+        containerColor = SurfaceSoft,
         bottomBar = { HomeBottomBar() }
     ) { insets ->
         if (loading) {
@@ -105,7 +115,6 @@ fun ProductsScreen(
                         onClick = { p -> navController.navigate(ProductDetailScreenRoute(p.id)) }
                     )
                 }
-
             }
         }
     }
@@ -114,8 +123,7 @@ fun ProductsScreen(
 @Composable
 private fun HeaderSection() {
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Avatar
@@ -126,18 +134,18 @@ private fun HeaderSection() {
                 .background(Color(0xFFEFEFEF)),
             contentAlignment = Alignment.Center
         ) {
-            Text("R", fontWeight = FontWeight.Bold)
+            Text("R", fontWeight = FontWeight.Bold, color = TextPrimary)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text("Hello,", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-            Text("Ryan AN", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text("Hello,", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+            Text("Ryan AN", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = TextPrimary)
         }
         IconButton(onClick = { /* notifications */ }) {
-            Icon(Icons.Default.Notifications, contentDescription = null)
+            Icon(Icons.Default.Notifications, contentDescription = null, tint = TextPrimary)
         }
         IconButton(onClick = { /* menu */ }) {
-            Icon(Icons.Default.Menu, contentDescription = null)
+            Icon(Icons.Default.Menu, contentDescription = null, tint = TextPrimary)
         }
     }
 }
@@ -147,15 +155,21 @@ private fun SearchBar() {
     OutlinedTextField(
         value = "",
         onValueChange = {},
-        readOnly = true, // solo visual por ahora
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        placeholder = { Text("Search for brand") },
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        readOnly = true,
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted) },
+        placeholder = { Text("Search for brand", color = TextMuted) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedBorderColor = Color(0xFFE6E6E6),
-            focusedBorderColor = Color(0xFFDADADA)
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            disabledContainerColor = Color.White,
+            focusedBorderColor = Color.Transparent,
+            unfocusedBorderColor = Color.Transparent,
+            disabledBorderColor = Color.Transparent,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            cursorColor = TextPrimary
         )
     )
 }
@@ -164,8 +178,9 @@ private fun SearchBar() {
 private fun PromoBanner() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5EFEA)),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = BannerBg),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             Modifier
@@ -174,12 +189,21 @@ private fun PromoBanner() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text("Get Pixel 7 and\nPixel 7 Pro", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Full speed ahead.", color = Color.Gray, modifier = Modifier.padding(top = 4.dp))
+                Text(
+                    "Get Pixel 7 and\nPixel 7 Pro",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text("Full speed ahead.", color = TextSecondary, modifier = Modifier.padding(top = 4.dp))
                 Button(
                     onClick = { /* CTA */ },
                     modifier = Modifier.padding(top = 12.dp),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = TextPrimary,
+                        contentColor = Color.White
+                    )
                 ) { Text("Shop Now") }
             }
             // Imagen de producto (placeholder)
@@ -205,7 +229,13 @@ private fun CategoryChips(
                 selected = selected == cat,
                 onClick = { onSelected(cat) },
                 label = { Text(cat) },
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = TextPrimary,
+                    selectedLabelColor = Color.White,
+                    containerColor = ChipBg,
+                    labelColor = TextPrimary
+                )
             )
         }
     }
@@ -217,9 +247,12 @@ private fun SectionTitle(title: String, onSeeAll: () -> Unit) {
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = TextPrimary)
         Spacer(Modifier.weight(1f))
-        TextButton(onClick = onSeeAll) { Text("See All") }
+        TextButton(
+            onClick = onSeeAll,
+            colors = ButtonDefaults.textButtonColors(contentColor = TextSecondary)
+        ) { Text("See All") }
     }
 }
 
@@ -245,7 +278,7 @@ private fun ProductMiniCard(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.width(200.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(Modifier.padding(12.dp)) {
             Box(
@@ -253,7 +286,7 @@ private fun ProductMiniCard(
                     .fillMaxWidth()
                     .height(110.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF1F1F1)),
+                    .background(PriceBg),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -267,6 +300,7 @@ private fun ProductMiniCard(
             Text(
                 product.title,
                 style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -275,11 +309,12 @@ private fun ProductMiniCard(
                 Text(
                     "$ ${"%.2f".format(product.price)}",
                     style = MaterialTheme.typography.titleSmall,
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = { /* wishlist */ }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.FavoriteBorder, contentDescription = null)
+                    Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = TextMuted)
                 }
             }
         }
@@ -288,37 +323,41 @@ private fun ProductMiniCard(
 
 @Composable
 private fun HomeBottomBar() {
-    NavigationBar {
+    val itemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = Color.White,
+        selectedTextColor = Color(0xFF4B5563),
+        unselectedIconColor = TextMuted,
+        unselectedTextColor = TextMuted,
+        indicatorColor = AccentIndicator
+    )
+    NavigationBar(containerColor = Color.White) {
         NavigationBarItem(
             selected = true, onClick = { /* Home */ },
-            icon = { Icon(Icons.Default.Search, null) }, label = { Text("Home") }
+            icon = { Icon(Icons.Default.Search, null) }, label = { Text("Home") },
+            colors = itemColors
         )
         NavigationBarItem(
             selected = false, onClick = { /* Wishlist */ },
-            icon = { Icon(Icons.Default.FavoriteBorder, null) }, label = { Text("Wishlist") }
+            icon = { Icon(Icons.Default.FavoriteBorder, null) }, label = { Text("Wishlist") },
+            colors = itemColors
         )
         NavigationBarItem(
             selected = false, onClick = { /* Cart */ },
-            icon = {
-                Icon(Icons.Default.ShoppingCart, null)
-            },
-            label = { Text("Cart") }
+            icon = { Icon(Icons.Default.ShoppingCart, null) }, label = { Text("Cart") },
+            colors = itemColors
         )
         NavigationBarItem(
             selected = false, onClick = { /* Profile */ },
-            icon = {
-                Icon(Icons.Default.AccountCircle, null)
-            },
-            label = { Text("Profile") }
+            icon = { Icon(Icons.Default.AccountCircle, null) }, label = { Text("Profile") },
+            colors = itemColors
         )
     }
 }
 
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ProductsScreenPreview() {
-    FakeStoreAppTheme {
+    FakeStoreAppTheme(darkTheme = false) { // fuerza tema claro en preview
         ProductsScreen(
             navController = rememberNavController(),
             contentPadding = PaddingValues(0.dp)
